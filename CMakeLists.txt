@@ -1,35 +1,29 @@
 cmake_minimum_required(VERSION 3.13)
 
-include(pico_sdk_import.cmake)
-
-project(ymk C CXX ASM)
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_CXX_STANDARD 17)
-
+#include(pico_sdk_import.cmake)
 
 set(FAMILY rp2040)
 set(BOARD pico_sdk)
+set(PICO_SDK_PATH /home/alayalava/git/pico-sdk)
+include(${PICO_SDK_PATH}/external/pico_sdk_import.cmake)
+include(${PICO_SDK_PATH}/lib/tinyusb/hw/bsp/${FAMILY}/family.cmake)
 
-add_executable(ymk)
+
+project(YMK C CXX ASM)
+
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 pico_sdk_init()
 
-target_sources(ymk PUBLIC
-        ${CMAKE_CURRENT_LIST_DIR}/main.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/usb_descriptors.c
-        )
+add_executable(ymk
+  main.c
+  usb_descriptors.c
+)
 
-# Make sure TinyUSB can find tusb_config.h
-target_include_directories(ymk PUBLIC
-        ${CMAKE_CURRENT_LIST_DIR})
+pico_enable_stdio_usb(ymk 0)
+pico_enable_stdio_uart(ymk 1)
 
-# In addition to pico_stdlib required for common PicoSDK functionality, add dependency on tinyusb_device
-# for TinyUSB device support and tinyusb_board for the additional board support library used by the example
-target_link_libraries(ymk PUBLIC pico_stdlib tinyusb_device tinyusb_board)
-
-# Uncomment this line to enable fix for Errata RP2040-E5 (the fix requires use of GPIO 15)
-#target_compile_definitions(dev_hid_composite PUBLIC PICO_RP2040_USB_DEVICE_ENUMERATION_FIX=1)
+target_include_directories(ymk PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 
 pico_add_extra_outputs(ymk)
-
-# add url via pico_set_program_url
-#example_auto_set_url(dev_hid_composite)
+target_link_libraries(ymk PRIVATE pico_stdlib tinyusb_device tinyusb_board)
